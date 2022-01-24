@@ -18,14 +18,17 @@ def create_post(post: CreatePost, session: Session):
     else:
         return post
 
-def get_all_posts(session:Session):
+def get_all_posts(session:Session, limit:int = 3, offset:int = 0, all_data: bool = False):
     try: 
-        posts = session.query(Post).all()
+        posts = session.query(Post)
+        if not all_data:
+            posts = posts.limit(limit).offset(offset)
+        all_posts = posts.all()
     except Exception:
         session.rollback()
         raise
     else:
-        return posts
+        return all_posts
 
 def get_single_post(post_id: int, session: Session):
     try: 
