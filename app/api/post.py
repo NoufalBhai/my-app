@@ -1,8 +1,7 @@
-import json
-from typing import List
-from flask import Blueprint, jsonify
+from flask import Blueprint
+from app.crud.user import get_user_by_id
 from app.db import SessionLocal
-from app.models.post import CreatePost, ShowPost, ListPost, PostPage, UpdatePost
+from app.models.post import CreatePost, ShowPost, ListPost, PostPage, UpdatePost, DeletePost
 from app.crud.post import create_post, get_all_posts, get_single_post
 from flask_pydantic import validate
 from flask import Response
@@ -62,5 +61,35 @@ def update_post(post_id: int, body:UpdatePost):
         raise
     else:
         return ShowPost.from_orm(post).dict()
+
+@bp.delete("/<post_id>")
+@validate()
+def delete_post(post_id: int, body: DeletePost):
+    author = body.author
+    user = get_user_by_id(author, session)
+    if not user:
+        return {
+            "error": True,
+            "message": "User Not Found"
+        }, 404
+    post = get_single_post(post_id, session)
+    if not post:
+        return {
+            "error": True,
+            "message": "Post Not Found"
+        }, 400
+    if not post.author == user.id:
+        return {
+            "error": True,
+            "message":  "You are not authorized to delete this post"
+        }, 401
+    try:
+        session.delete(post)
+        session.commit()
+    except Exception as ex:
+        session.rollback()
+        raise
+    else:
+        return {},204
 
     

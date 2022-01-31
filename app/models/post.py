@@ -34,3 +34,6 @@ class UpdatePost(BaseModel):
     title: Optional[str]
     content: Optional[str]
     author: UUID
+
+class DeletePost(BaseModel):
+    author: UUID
