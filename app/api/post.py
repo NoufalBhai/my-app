@@ -1,19 +1,23 @@
+from typing import Optional
+from uuid import UUID
 from flask import Blueprint
 from app.crud.user import get_user_by_id
 from app.db import SessionLocal
-from app.models.post import CreatePost, ShowPost, ListPost, PostPage, UpdatePost, DeletePost
+from app.models.post import CreatePost, ShowPost, ListPost, PostPage, UpdatePost
 from app.crud.post import create_post, get_all_posts, get_single_post
 from flask_pydantic import validate
 from flask import Response
+from app.utils import auth
 
 session = SessionLocal()
 
 bp = Blueprint("post", __name__, url_prefix="/post")
 
 @bp.post("/")
+@auth.validate_token
 @validate()
-def post_creation(body: CreatePost):
-    post = create_post(body, session)
+def post_creation(body: CreatePost, user_id: Optional[UUID]=None):
+    post = create_post(body, user_id, session)
     if post:
         return ShowPost.from_orm(post).dict(), 201
     return {
@@ -42,12 +46,13 @@ def get_post(post_id: int):
     return {"error": True, "message": "Post Not Found"}, 404
 
 @bp.put("/<post_id>")
+@auth.validate_token
 @validate()
-def update_post(post_id: int, body:UpdatePost):
+def update_post(post_id: int, body: UpdatePost, user_id: Optional[UUID]):
     post = get_single_post(post_id, session)
     if not post:
         return {"error": True, "message": "Post Not Found"}, 404
-    if not post.author == body.author:
+    if not post.author == user_id:
         return {"error": True, "message": "You are not authorized to edit this post"}, 401
     if body.title:
         post.title = body.title
@@ -63,9 +68,9 @@ def update_post(post_id: int, body:UpdatePost):
         return ShowPost.from_orm(post).dict()
 
 @bp.delete("/<post_id>")
-@validate()
-def delete_post(post_id: int, body: DeletePost):
-    author = body.author
+@auth.validate_token
+def delete_post(post_id: int, user_id: UUID):
+    author = user_id
     user = get_user_by_id(author, session)
     if not user:
         return {

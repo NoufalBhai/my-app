@@ -6,13 +6,13 @@ from pydantic import BaseModel
 class PostBase(BaseModel):
     title: str
     content: str
-    author: UUID
 
 class CreatePost(PostBase):
     pass
 
 class ShowPost(PostBase):
     id: int
+    author: UUID
     created_date: datetime
     updated_date: datetime
 
@@ -33,7 +33,4 @@ class PostPage(BaseModel):
 class UpdatePost(BaseModel):
     title: Optional[str]
     content: Optional[str]
-    author: UUID
 
-class DeletePost(BaseModel):
-    author: UUID

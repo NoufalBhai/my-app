@@ -14,4 +14,6 @@ def create_app():
     app.register_blueprint(post.bp)
     from app.api import auth
     app.register_blueprint(auth.bp)
+    from app.api import like
+    app.register_blueprint(like.bp)
     return app

@@ -1,14 +1,11 @@
-from turtle import pos
+from uuid import UUID
 from app.schemas import Post
-from app.db import SessionLocal
 from sqlalchemy.orm.session import Session
 from app.models.post import CreatePost
 
-session = SessionLocal()
-
-def create_post(post: CreatePost, session: Session):
+def create_post(post: CreatePost, user_id: UUID, session: Session):
     try:
-        post = Post(**post.dict())
+        post = Post(**post.dict(), author=user_id)
         session.add(post)
         session.commit()
         session.refresh(post)
